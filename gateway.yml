@@ -15,7 +15,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
   
   cloud:
     gateway:
@@ -57,7 +57,7 @@ spring:
             - Path=/webjars/**
           order: -1
         
-        # ========== RUTAS PÚBLICAS (sin autenticación) ==========
+        # ========== RUTAS PÚBLICAS ==========
         - id: auth-public
           uri: lb://usuarios-service
           predicates:
@@ -124,27 +124,6 @@ spring:
             - Path=/eureka/**
           order: 2
 
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins: 
-              - "http://localhost:3000"
-              - "http://localhost:4200"
-              - "http://localhost:5173"
-              - "https://localhost:8443"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - PATCH
-              - OPTIONS
-            allowedHeaders: "*"
-            exposedHeaders:
-              - Authorization
-            allowCredentials: true
-            maxAge: 3600
-
 eureka:
   client:
     serviceUrl:
@@ -152,16 +131,16 @@ eureka:
     initialInstanceInfoReplicationIntervalSeconds: 5
     registryFetchIntervalSeconds: 5
   instance:
-    preferIpAddress: true
     hostname: gateway-service
+    preferIpAddress: false
     leaseRenewalIntervalInSeconds: 5
     leaseExpirationDurationInSeconds: 5
-    non-secure-port-enabled: false
-    secure-port-enabled: true
-    secure-port: 8443
-    home-page-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/
-    status-page-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/actuator/info
-    health-check-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/actuator/health
+    nonSecurePortEnabled: false
+    securePortEnabled: true
+    securePort: 8443
+    statusPageUrl: https://${eureka.instance.hostname}:${eureka.instance.securePort}/actuator/info
+    healthCheckUrl: https://${eureka.instance.hostname}:${eureka.instance.securePort}/actuator/health
+    homePageUrl: https://${eureka.instance.hostname}:${eureka.instance.securePort}/
 
 management:
   endpoint:
