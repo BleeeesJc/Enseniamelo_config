@@ -1,18 +1,15 @@
-server.port: 8443
-
-server.ssl:
-  key-store-type: PKCS12
-  key-store: classpath:keystore/keystore.p12
-  key-store-password: password
-  key-alias: localhost
-
-  spring.application.name: gateway-service
-
+server:
+  port: 8443
+  ssl:
+    key-store-type: PKCS12
+    key-store: classpath:keystore/keystore.p12
+    key-store-password: password
+    key-alias: localhost
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
   
   cloud:
     gateway:
@@ -53,7 +50,7 @@ server.ssl:
             - Path=/webjars/**
           order: -1
         
-        # ========== RUTAS PÚBLICAS==========
+        # ========== RUTAS PÚBLICAS ==========
         - id: auth-public
           uri: lb://usuarios-service
           predicates:
@@ -119,6 +116,7 @@ server.ssl:
           predicates:
             - Path=/eureka/**
           order: 2
+
 eureka:
   client:
     serviceUrl:
@@ -148,7 +146,29 @@ management:
 logging:
   level:
     root: INFO
-    '[org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator]': INFO
-    '[org.springframework.cloud.gateway]': DEBUG
-    '[org.springframework.security]': DEBUG
-    '[org.springframework.security.oauth2]': DEBUG
+    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+server:
+  ssl:
+    key-store: file:/keystore/keystore.p12
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
