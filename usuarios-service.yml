@@ -5,6 +5,9 @@ server:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
+  spring:
+    config:
+      import: optional:classpath:application-openapi.yml
   
   rabbitmq:
     host: rabbitmq
