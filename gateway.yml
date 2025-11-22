@@ -32,8 +32,7 @@ spring:
         - id: usuarios-swagger-ui-alias
           uri: lb://usuarios-service
           predicates:
-            - Path=/swagger-ui.html
-            - Path=/swagger-ui/**
+            - Path=/swagger-ui.html,/swagger-ui/**
           filters:
             - RewritePath=/swagger-ui(?<segment>.*), /openapi/swagger-ui${segment}
           order: -1
