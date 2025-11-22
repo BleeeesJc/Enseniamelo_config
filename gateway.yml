@@ -159,6 +159,9 @@ eureka:
     non-secure-port-enabled: false
     secure-port-enabled: true
     secure-port: 8443
+    home-page-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/
+    status-page-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/actuator/info
+    health-check-url: https://${eureka.instance.hostname}:${eureka.instance.secure-port}/actuator/health
 
 management:
   endpoint:
