@@ -16,3 +16,6 @@ APP_PORT: 8002
 EUREKA_APP_NAME: PAYMENTS-SERVICE
 EUREKA_INSTANCE_HOST: payments-service
 EUREKA_INSTANCE_PORT: 8002
+
+secret.mongo-password: "{cipher}e16de9305acdb0dfd4135251aaddb9ad4f7828b478ee9fec3ab7fe68a3dbeaec"
+
