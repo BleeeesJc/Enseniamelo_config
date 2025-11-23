@@ -1,16 +1,17 @@
-# payments-service.yml  (repositorio Enseniamelo_config)
+# payments-service.yml
 
 # 🔹 Configuración propia del ms de pagos
 APP_NAME: payments-service
 APP_PORT: 8002
-
-# Estos valores se usarán solo si quieres sobreescribir lo global
 EUREKA_APP_NAME: PAYMENTS-SERVICE
+
+# 🔹 Mongo para pagos (pisará lo que venga de application.yml)
+MONGO_URI: "mongodb+srv://jaredpimentel_db_user:DpCito170209@cluster0.cibyezm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_DB: enseniamelo
 
 ---
 spring.config.activate.on-profile: docker
 
-# Overrides específicos para Docker
 APP_PORT: 8002
 EUREKA_APP_NAME: PAYMENTS-SERVICE
 EUREKA_INSTANCE_HOST: payments-service
