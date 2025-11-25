@@ -1,0 +1,20 @@
+# cursoservice.yml
+
+APP_NAME: CURSOSERVICE
+APP_ENV: dev
+LOG_LEVEL: INFO
+DEBUG: true
+API_PREFIX: /api/v1
+
+PORT: 8000
+
+MONGODB_URI: "mongodb+srv://jaredpimentel_db_user:DpCito170209@cluster0.cibyezm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGODB_DB: enseniamelo
+
+---
+spring.config.activate.on-profile: docker
+
+APP_ENV: docker
+LOG_LEVEL: INFO
+DEBUG: false
+PORT: 8000
