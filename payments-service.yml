@@ -4,7 +4,7 @@ APP_NAME: payments-service
 APP_PORT: 8002
 EUREKA_APP_NAME: PAYMENTS-SERVICE
 
-MONGO_URI: "mongodb+srv://jaredpimentel_db_user:DpCito170209@cluster0.cibyezm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI: "{cipher}606804c5ed12275b27337d7b0fe6ce425a36df6f3e8051770b87f4941d852a5a"
 MONGO_DB: enseniamelo
 
 ---
