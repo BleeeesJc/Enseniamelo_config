@@ -4,7 +4,7 @@ spring:
 
   data:
     mongodb:
-      uri: "{cipher}ed952b47800a9a59c4aadf2cac3c9ee10e0ec54aa401cd78e043fc12370b7a6a"
+      uri: "mongodb://jaredpimente1_db_user:DpCito170209@cluster0-shard-00-00.cibvezm.mongodb.net:27017,cluster0-shard-00-01.cibvezm.mongodb.net:27017,cluster0-shard-00-02.cibvezm.mongodb.net:27017/enseniamelo?ssl=true&replicaSet=atlas-abcdef-shard-0&authSource=admin&retryWrites=true&w=majority"
 
   security:
     oauth2:
