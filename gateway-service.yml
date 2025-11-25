@@ -68,7 +68,6 @@
               - Path=/api/v1/auth/**
             filters:
               - RewritePath=/api(?<segment>.*), $\{segment}
-              - RemoveRequestHeader=Authorization
             order: 0
           
           # ========== RUTAS PROTEGIDAS ==========
@@ -152,4 +151,5 @@
       '[org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator]': INFO
       '[org.springframework.cloud.gateway]': DEBUG
       '[org.springframework.security]': DEBUG
+
       '[org.springframework.security.oauth2]': DEBUG
