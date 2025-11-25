@@ -58,8 +58,6 @@
             uri: lb://usuarios-service
             predicates:
               - Path=/v1/auth/login,/v1/auth/register
-            filters:
-              - RemoveRequestHeader=Authorization
             order: 0
           
           - id: auth-api-public
@@ -153,3 +151,4 @@
       '[org.springframework.security]': DEBUG
 
       '[org.springframework.security.oauth2]': DEBUG
+
