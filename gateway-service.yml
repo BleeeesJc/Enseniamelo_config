@@ -11,7 +11,7 @@
       oauth2:
         resourceserver:
           jwt:
-            issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+            issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
     
     cloud:
       gateway:
@@ -151,4 +151,5 @@
       '[org.springframework.security]': DEBUG
 
       '[org.springframework.security.oauth2]': DEBUG
+
 
