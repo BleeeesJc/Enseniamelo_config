@@ -1,11 +1,9 @@
 # payments-service.yml
 
-# 🔹 Configuración propia del ms de pagos
 APP_NAME: payments-service
 APP_PORT: 8002
 EUREKA_APP_NAME: PAYMENTS-SERVICE
 
-# 🔹 Mongo para pagos (pisará lo que venga de application.yml)
 MONGO_URI: "mongodb+srv://jaredpimentel_db_user:DpCito170209@cluster0.cibyezm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 MONGO_DB: enseniamelo
 
