@@ -1,3 +1,4 @@
+# Global defaults (aplican a todos los servicios)
 eureka:
   client:
     serviceUrl:
@@ -16,10 +17,6 @@ spring:
         binder:
           brokers: kafka:29092
 
-logging:
-  level:
-    root: INFO
-
 management:
   endpoints:
     web:
@@ -28,3 +25,7 @@ management:
   endpoint:
     health:
       show-details: always
+
+logging:
+  level:
+    root: INFO
