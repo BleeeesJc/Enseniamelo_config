@@ -14,7 +14,7 @@ server:
 
 eureka:
   client:
-    service-url:
+    serviceUrl:
       defaultZone: http://eureka-server:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
@@ -49,3 +49,8 @@ spring:
   config:
     activate:
       on-profile: docker
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
