@@ -32,7 +32,7 @@ spring:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
-              - "http://localhost:5173"
+              - "http://localhost:5173"   
             allowedMethods:
               - GET
               - POST
@@ -44,64 +44,87 @@ spring:
             allowCredentials: true
 
       routes:
-        - id: ms-usuarios
+        # ========== RUTAS DE DOCUMENTACIÓN  ==========
+        - id: usuarios-openapi-swagger-ui
           uri: lb://usuarios-service
           predicates:
-            - Path=/ms-usuarios/**
-          filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /ms-usuarios
-            - AddRequestHeader=X-Forwarded-Proto, http
-          order: 1
+            - Path=/openapi/**
+          order: -1
 
-        # -------- DOCUMENTACIÓN (Swagger / OpenAPI) -------------
-        - id: usuarios-docs
+        - id: usuarios-swagger-ui-alias
           uri: lb://usuarios-service
           predicates:
-            - Path=/usuarios/docs,/usuarios/swagger,/usuarios/openapi,/usuarios/openapi/**
+            - Path=/swagger-ui.html,/swagger-ui/**
           filters:
-            - StripPrefix=1
-          order: 1
+            - RewritePath=/swagger-ui(?<segment>.*), /openapi/swagger-ui$\{segment}
+          order: -1
 
-        - id: ms-payments
-          uri: lb://payments-service
+        - id: usuarios-api-docs-alias
+          uri: lb://usuarios-service
           predicates:
-            - Path=/ms-payments/**
+            - Path=/v3/api-docs,/v3/api-docs/**
           filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /ms-payments
-            - AddRequestHeader=X-Forwarded-Proto, http
-          order: 1
+            - RewritePath=/v3/api-docs(?<segment>.*), /openapi/v3/api-docs$\{segment}
+          order: -1
 
-        - id: payments-docs
-          uri: lb://payments-service
+        - id: usuarios-webjars
+          uri: lb://usuarios-service
           predicates:
-            - Path=/payments/docs
+            - Path=/webjars/**
+          order: -1
+
+        # ========== RUTAS PÚBLICAS ==========
+        - id: auth-public
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/auth/login,/v1/auth/register
           filters:
-            - StripPrefix=1
-          order: 2
-
-        - id: payments-redoc
-          uri: lb://payments-service
-          predicates:
-            - Path=/payments/redoc
-          filters:
-            - StripPrefix=1
-          order: 2
-
-        - id: payments-openapi
-          uri: lb://payments-service
-          predicates:
-            - Path=/payments/openapi.json
-          filters:
-            - StripPrefix=1
-          order: 2
-
-        - id: openapi-root-to-payments
-          uri: lb://payments-service
-          predicates:
-            - Path=/openapi.json
+            - RemoveRequestHeader=Authorization
           order: 0
+
+        - id: auth-api-public
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - RewritePath=/api(?<segment>.*), $\{segment}
+            - RemoveRequestHeader=Authorization
+          order: 0
+
+        # ========== RUTAS PROTEGIDAS ==========
+        - id: usuarios-v1-direct
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/usuario,/v1/usuario/**
+          order: 1
+
+        - id: usuarios-v1-api
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/api/v1/usuario,/api/v1/usuario/**
+          filters:
+            - RewritePath=/api(?<segment>.*), $\{segment}
+          order: 1
+
+        - id: tutores-v1-direct
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/tutores,/v1/tutores/**
+          order: 1
+
+        - id: tutores-v1-api
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/api/v1/tutores,/api/v1/tutores/**
+          filters:
+            - RewritePath=/api(?<segment>.*), $\{segment}
+          order: 1
+
+        - id: verificacion-v1-direct
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/verificacion,/v1/verificacion/**
+          order: 1
 
         - id: eureka-web-start
           uri: http://eureka-server:8761
@@ -116,7 +139,6 @@ spring:
           predicates:
             - Path=/eureka/**
           order: 2
-
 
 eureka:
   client:
