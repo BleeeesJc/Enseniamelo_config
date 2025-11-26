@@ -15,11 +15,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # Si ya tienes bien el issuer
-         # issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
-          # O podrías usar en su lugar:
-          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
-
+          issuer-uri: http://localhost:8080/realms/enseniamelo-realm,
+          "jwks_uri": "http://localhost:8080/realms/enseniamelo-realm/protocol/openid-connect/certs"
   cloud:
     gateway:
       default-filters:
