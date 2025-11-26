@@ -15,9 +15,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/enseniamelo-realm,
-          "jwks_uri": "http://localhost:8080/realms/enseniamelo-realm/protocol/openid-connect/certs"
-  cloud:
+          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
     gateway:
       default-filters:
         - TokenRelay
