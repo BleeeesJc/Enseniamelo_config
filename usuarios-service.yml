@@ -4,7 +4,8 @@ server:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
+          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
   
   rabbitmq:
     host: rabbitmq
