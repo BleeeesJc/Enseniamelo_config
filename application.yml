@@ -4,7 +4,7 @@ server:
     include-binding-errors: always
     include-exception: true  
 
-app.eureka-server: localhost
+app.eureka-server: eureka-server
 
 eureka:
   client:
