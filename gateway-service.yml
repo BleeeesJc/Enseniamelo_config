@@ -12,10 +12,11 @@ spring:
     name: gateway-service
 
   security:
-    oauth2:
+      oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
+          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
 
   cloud:
     gateway:
@@ -32,7 +33,8 @@ spring:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
-              - "http://localhost:5173"   
+              - "http://localhost:5173"
+              - "http://127.0.0.1:5173"
             allowedMethods:
               - GET
               - POST
@@ -181,4 +183,3 @@ logging:
     "[org.springframework.cloud.gateway]": DEBUG
     "[org.springframework.security]": DEBUG
     "[org.springframework.security.oauth2]": DEBUG
-
