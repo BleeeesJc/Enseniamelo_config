@@ -28,4 +28,5 @@ management:
 
 logging:
   level:
-    root: INFO
+    org.springframework.cloud.config: DEBUG
+    org.eclipse.jgit: DEBUG

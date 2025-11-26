@@ -4,8 +4,7 @@ spring:
 
   data:
     mongodb:
-      # Reemplaza con {cipher}... si usas cifrado con /encrypt
-      uri: "{cipher}2dd3c90b43c4e87201e44db66a19d271036e2fbf22ad7736f5e8618412a79100}"
+      uri: "{cipher}2dd3c90b43c4e87201e44db66a19d271036e2fbf22ad7736f5e8618412a79100"
       database: enseniamelo
 
   security:
