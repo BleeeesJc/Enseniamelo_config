@@ -41,6 +41,8 @@ spring:
               - OPTIONS
             allowedHeaders:
               - "*"
+            exposedHeaders:
+              - "Authorization"
             allowCredentials: true
 
       routes:
@@ -80,6 +82,12 @@ spring:
             - Path=/v1/auth/login,/v1/auth/register
           filters:
             - RemoveRequestHeader=Authorization
+          order: 0
+
+        - id: auth-v1
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/auth/**
           order: 0
 
         - id: auth-api-public
@@ -173,8 +181,3 @@ logging:
     "[org.springframework.cloud.gateway]": DEBUG
     "[org.springframework.security]": DEBUG
     "[org.springframework.security.oauth2]": DEBUG
-
-
-
-
-
