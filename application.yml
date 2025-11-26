@@ -1,4 +1,4 @@
-# Global defaults (aplican a todos los servicios)
+# Global defaults
 eureka:
   client:
     serviceUrl:
