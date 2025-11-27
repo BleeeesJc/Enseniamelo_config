@@ -14,7 +14,6 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/enseniamelo
           jwk-set-uri: http://keycloak:8080/realms/enseniamelo/protocol/openid-connect/certs
 
   cloud:
@@ -100,7 +99,6 @@ eureka:
     initialInstanceInfoReplicationIntervalSeconds: 5
     registryFetchIntervalSeconds: 5
   instance:
-    instance-id: gateway-service-5837f6dfbb14
     preferIpAddress: false
     hostname: gateway-service
     leaseRenewalIntervalInSeconds: 5
