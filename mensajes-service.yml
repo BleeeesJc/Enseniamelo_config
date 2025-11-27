@@ -5,8 +5,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:9090/realms/enseniamelo
-          jwk-set-uri: http://keycloak:9090/realms/enseniamelo/protocol/openid-connect/certs
+          issuer-uri: http://keycloak:8080/realms/enseniamelo
+          jwk-set-uri: http://keycloak:8080/realms/enseniamelo/protocol/openid-connect/certs
 
 server:
   port: 8082
