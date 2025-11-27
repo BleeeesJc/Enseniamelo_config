@@ -40,8 +40,11 @@ management:
 
 logging:
   level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
     root: INFO
     "[com.enseniamelo]": DEBUG
     "[org.springframework.security]": DEBUG
     "[com.netflix.discovery]": DEBUG
     "[com.netflix.eureka]": DEBUG
+    "[org.springframework.web]": DEBUG
