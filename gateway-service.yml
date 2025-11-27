@@ -100,6 +100,7 @@ eureka:
     initialInstanceInfoReplicationIntervalSeconds: 5
     registryFetchIntervalSeconds: 5
   instance:
+    instance-id: gateway-service-5837f6dfbb14
     preferIpAddress: false
     hostname: gateway-service
     leaseRenewalIntervalInSeconds: 5
