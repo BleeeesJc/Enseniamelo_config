@@ -8,7 +8,7 @@ API_PREFIX: /api/v1
 
 PORT: 8000
 
-MONGODB_URI: "mongodb+srv://jaredpimentel_db_user:DpCito170209@cluster0.cibyezm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGODB_URI: "{cipher}cd969fc1fbb6e7c15722f9a074ebe4bcdaa12c3882fcd9470a3975ffab42b4e982a567ad36971d3958d301aa72461742010eabb9c89623345fd5b29b9c8b4c1798c55b164b0640a08522e8bbcdf3e8cc90d1f73bb97e1549160259846505377a2a7b2f0a2814affd919ff34d16da04e6e12c50af67211e922abdf4358b1253a6db3f442ad71d2e628b938752d16d46bb"
 MONGODB_DB: enseniamelo
 
 ---
