@@ -30,9 +30,9 @@ spring:
         - id: config-server
           uri: http://config-server:8888
           predicates:
-            - Path=/config/encrypt, /config/**
+            - Path=/config/**
           filters:
-            - RewritePath=/config/(?<segment>.*), /$\{segment}
+            - RewritePath=/config/(?<segment>.*), /${segment}
           order: -1
 
         # ===================== SWAGGER MENSAJES SERVICE =====================
