@@ -7,12 +7,12 @@ server.ssl:
   key-alias: gateway
 spring:
   application:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8080/realms/enseniamelo
-          jwk-set-uri: http://keycloak:8080/realms/enseniamelo/protocol/openid-connect/certs
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuer-uri: http://localhost:8080/realms/enseniamelo
+            jwk-set-uri: http://keycloak:8080/realms/enseniamelo/protocol/openid-connect/certs
 
   cloud:
     gateway:
