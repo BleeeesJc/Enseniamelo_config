@@ -14,7 +14,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://keycloak:8080/realms/enseniamelo/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8080/realms/enseniamelo
 
   cloud:
     gateway:
