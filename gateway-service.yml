@@ -16,9 +16,9 @@ spring:
       resourceserver:
         jwt:
           # De HEAD
+          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          # 👇 opcional pero recomendable en Docker: URL interna para bajar las claves
           jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
-          # De la otra rama
-          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
 
   cloud:
     gateway:
