@@ -12,7 +12,7 @@ spring:
     name: gateway-service
 
   security:
-      oauth2:
+    oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:8080/realms/enseniamelo-realm
@@ -48,6 +48,7 @@ spring:
             allowCredentials: true
 
       routes:
+        # ===================== CONFIG SERVER =====================
         - id: config-server
           uri: http://config-server:8888
           predicates:
@@ -55,7 +56,8 @@ spring:
           filters:
             - RewritePath=/config/(?<segment>.*), /$\{segment}
           order: -1
-        # ========== RUTAS DE DOCUMENTACIÓN  ==========
+
+        # ===================== DOCUMENTACIÓN USUARIOS SERVICE =====================
         - id: usuarios-openapi-swagger-ui
           uri: lb://usuarios-service
           predicates:
@@ -84,7 +86,24 @@ spring:
             - Path=/webjars/**
           order: -1
 
-        # ========== RUTAS PÚBLICAS ==========
+        # ===================== DOCUMENTACIÓN MENSAJES SERVICE =====================
+        - id: mensajes-swagger-ui
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/mensajes/swagger-ui.html,/mensajes/swagger-ui/**,/mensajes/webjars/**,/mensajes/openapi/swagger-ui/**
+          filters:
+            - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
+          order: -1
+
+        - id: mensajes-openapi-docs
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/mensajes/openapi/v3/api-docs,/mensajes/openapi/v3/api-docs/**
+          filters:
+            - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
+          order: -1
+
+        # ===================== RUTAS PÚBLICAS - USUARIOS SERVICE =====================
         - id: auth-public
           uri: lb://usuarios-service
           predicates:
@@ -108,7 +127,7 @@ spring:
             - RemoveRequestHeader=Authorization
           order: 0
 
-        # ========== RUTAS PROTEGIDAS ==========
+        # ===================== RUTAS PROTEGIDAS - USUARIOS SERVICE =====================
         - id: usuarios-v1-direct
           uri: lb://usuarios-service
           predicates:
@@ -143,6 +162,36 @@ spring:
             - Path=/v1/verificacion,/v1/verificacion/**
           order: 1
 
+        # ===================== RUTAS PROTEGIDAS - MENSAJES SERVICE =====================
+        - id: mensajes-v1-direct
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/v1/mensaje,/v1/mensaje/**
+          order: 1
+
+        - id: mensajes-v1-api
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/api/v1/mensaje,/api/v1/mensaje/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
+          order: 1
+
+        - id: chats-v1-direct
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/v1/chat,/v1/chat/**
+          order: 1
+
+        - id: chats-v1-api
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/api/v1/chat,/api/v1/chat/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
+          order: 1
+
+        # ===================== EUREKA SERVER =====================
         - id: eureka-web-start
           uri: http://eureka-server:8761
           predicates:
@@ -190,4 +239,3 @@ logging:
     "[org.springframework.cloud.gateway]": DEBUG
     "[org.springframework.security]": DEBUG
     "[org.springframework.security.oauth2]": DEBUG
-
