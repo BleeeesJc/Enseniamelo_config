@@ -103,6 +103,16 @@ spring:
             - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
           order: -1
 
+        # ===================== DOCUMENTACIÓN COMENTARIOS SERVICE =====================
+        - id: comentarios-openapi-swagger-ui
+          uri: lb://comentarios-service
+          predicates:
+            - Path=/comentarios/openapi/**
+          filters:
+            - RewritePath=/comentarios/openapi(?<segment>.*), /openapi$\{segment}
+            - RemoveRequestHeader=Authorization
+          order: -1
+
         # ===================== RUTAS PÚBLICAS - USUARIOS SERVICE =====================
         - id: auth-public
           uri: lb://usuarios-service
@@ -124,6 +134,16 @@ spring:
             - Path=/api/v1/auth/**
           filters:
             - RewritePath=/api(?<segment>.*), $\{segment}
+            - RemoveRequestHeader=Authorization
+          order: 0
+
+        # ===================== RUTAS PÚBLICAS - COMENTARIOS SERVICE =====================
+        - id: comentarios-api-public-get
+          uri: lb://comentarios-service
+          predicates:
+            - Path=/api/comentario-curso,/api/comentario-curso/**
+            - Method=GET
+          filters:
             - RemoveRequestHeader=Authorization
           order: 0
 
@@ -191,6 +211,14 @@ spring:
             - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
           order: 1
 
+        # ===================== RUTAS PROTEGIDAS - COMENTARIOS SERVICE =====================
+        - id: comentarios-api-secured-mutate
+          uri: lb://comentarios-service
+          predicates:
+            - Path=/api/comentario-curso,/api/comentario-curso/**
+            - Method=POST,PUT,DELETE
+          order: 1
+
         # ===================== EUREKA SERVER =====================
         - id: eureka-web-start
           uri: http://eureka-server:8761
@@ -239,3 +267,4 @@ logging:
     "[org.springframework.cloud.gateway]": DEBUG
     "[org.springframework.security]": DEBUG
     "[org.springframework.security.oauth2]": DEBUG
+
