@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: comentarios-service
+
+  data:
+    mongodb:
+      uri: "{cipher}2dd3c90b43c4e87201e44db66a19d271036e2fbf22ad7736f5e8618412a79100"
+      database: enseniamelo
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Dentro de Docker, resolverá keycloak:8080
+          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
+
+  cloud:
+    stream:
+      bindings:
+        comentarioCreado-out-0:
+          destination: comentarios
+          content-type: application/json
+        comentarioEliminado-out-0:
+          destination: comentarios
+          content-type: application/json
+        messageProcessor-in-0:
+          destination: comentarios
+          content-type: application/json
+          group: comentariosGroup
+      kafka:
+        binder:
+          autoCreateTopics: true
+
+eureka:
+  instance:
+    hostname: comentarios-service
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.cloud.stream: INFO
