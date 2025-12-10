@@ -1,0 +1,75 @@
+server:
+  port: 7002
+
+spring:
+  application:
+    name: comentarios-service
+
+  data:
+    mongodb:
+      uri: "{cipher}2dd3c90b43c4e87201e44db66a19d271036e2fbf22ad7736f5e8618412a79100"
+      database: enseniamelo
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
+  
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+
+  cloud:
+    stream:
+      bindings:
+        comentarioCreado-out-0:
+          destination: comentarios
+          content-type: application/json
+        comentarioEliminado-out-0:
+          destination: comentarios
+          content-type: application/json
+        messageProcessor-in-0:
+          destination: comentarios
+          content-type: application/json
+          group: comentariosGroup
+      kafka:
+        binder:
+          autoCreateTopics: true
+
+eureka:
+  instance:
+    hostname: comentarios-service
+
+logging:
+  level:
+    root: INFO
+    org.springdoc: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.cloud.stream: DEBUG
+    org.springframework.security: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,bindings,env
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mongo:
+      enabled: true
+
+---
+spring.config.activate.on-profile: docker
+server.port: 8083
+
+---
+spring.config.activate.on-profile: local
+server.port: 7002
+spring.rabbitmq.host: localhost
+

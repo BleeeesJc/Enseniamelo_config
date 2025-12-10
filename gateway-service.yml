@@ -15,14 +15,14 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # De HEAD
+          # Aceptamos tokens emitidos por Keycloak en localhost,
+          # y usamos la URL interna de Docker para bajar las claves (JWKS)
           issuer-uri: http://localhost:8080/realms/enseniamelo-realm
-          # 👇 opcional pero recomendable en Docker: URL interna para bajar las claves
           jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
 
   cloud:
     gateway:
-      # De la otra rama: TokenRelay en el lugar correcto
+      # TokenRelay para propagar el token al backend
       default-filters:
         - TokenRelay
 
@@ -40,16 +40,33 @@ spring:
               - "http://localhost:3000"
               - "http://localhost:4200"
               - "http://localhost:5173"
+              - "http://127.0.0.1:5173"
               - "https://localhost:8443"
-            allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
-            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders:
+              - "*"
             exposedHeaders:
-              - Authorization
+              - "Authorization"
             allowCredentials: true
             maxAge: 3600
 
       routes:
-        # ========== RUTAS DE DOCUMENTACIÓN USUARIOS ==========
+        # ===================== CONFIG SERVER =====================
+        - id: config-server
+          uri: http://config-server:8888
+          predicates:
+            - Path=/config/**
+          filters:
+            - RewritePath=/config/(?<segment>.*), /$\{segment}
+          order: -1
+
+        # ===================== DOCUMENTACIÓN USUARIOS SERVICE =====================
         - id: usuarios-openapi-swagger-ui
           uri: lb://usuarios-service
           predicates:
@@ -61,7 +78,7 @@ spring:
           predicates:
             - Path=/swagger-ui.html,/swagger-ui/**
           filters:
-            - 'RewritePath=/swagger-ui(?<segment>.*), /openapi/swagger-ui${segment}'
+            - RewritePath=/swagger-ui(?<segment>.*), /openapi/swagger-ui$\{segment}
           order: -1
 
         - id: usuarios-api-docs-alias
@@ -69,7 +86,7 @@ spring:
           predicates:
             - Path=/v3/api-docs,/v3/api-docs/**
           filters:
-            - 'RewritePath=/v3/api-docs(?<segment>.*), /openapi/v3/api-docs${segment}'
+            - RewritePath=/v3/api-docs(?<segment>.*), /openapi/v3/api-docs$\{segment}
           order: -1
 
         - id: usuarios-webjars
@@ -78,7 +95,34 @@ spring:
             - Path=/webjars/**
           order: -1
 
-        # ========== RUTAS PÚBLICAS (sin autenticación) ==========
+        # ===================== DOCUMENTACIÓN MENSAJES SERVICE =====================
+        - id: mensajes-swagger-ui
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/mensajes/swagger-ui.html,/mensajes/swagger-ui/**,/mensajes/webjars/**,/mensajes/openapi/swagger-ui/**
+          filters:
+            - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
+          order: -1
+
+        - id: mensajes-openapi-docs
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/mensajes/openapi/v3/api-docs,/mensajes/openapi/v3/api-docs/**
+          filters:
+            - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
+          order: -1
+
+        # ===================== DOCUMENTACIÓN COMENTARIOS SERVICE =====================
+        - id: comentarios-openapi-swagger-ui
+          uri: lb://comentarios-service
+          predicates:
+            - Path=/comentarios/openapi/**
+          filters:
+            - RewritePath=/comentarios/openapi(?<segment>.*), /openapi$\{segment}
+            - RemoveRequestHeader=Authorization
+          order: -1
+
+        # ===================== RUTAS PÚBLICAS - USUARIOS SERVICE =====================
         - id: auth-public
           uri: lb://usuarios-service
           predicates:
@@ -87,16 +131,32 @@ spring:
             - RemoveRequestHeader=Authorization
           order: 0
 
+        - id: auth-v1
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/auth/**
+          order: 0
+
         - id: auth-api-public
           uri: lb://usuarios-service
           predicates:
             - Path=/api/v1/auth/**
           filters:
-            - 'RewritePath=/api(?<segment>.*), ${segment}'
+            - RewritePath=/api(?<segment>.*), $\{segment}
             - RemoveRequestHeader=Authorization
           order: 0
 
-        # ========== RUTAS PROTEGIDAS USUARIOS ==========
+        # ===================== RUTAS PÚBLICAS - COMENTARIOS SERVICE =====================
+        - id: comentarios-api-public-get
+          uri: lb://comentarios-service
+          predicates:
+            - Path=/api/comentario-curso,/api/comentario-curso/**
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Authorization
+          order: 0
+
+        # ===================== RUTAS PROTEGIDAS - USUARIOS SERVICE =====================
         - id: usuarios-v1-direct
           uri: lb://usuarios-service
           predicates:
@@ -108,7 +168,7 @@ spring:
           predicates:
             - Path=/api/v1/usuario,/api/v1/usuario/**
           filters:
-            - 'RewritePath=/api(?<segment>.*), ${segment}'
+            - RewritePath=/api(?<segment>.*), $\{segment}
           order: 1
 
         - id: tutores-v1-direct
@@ -122,7 +182,7 @@ spring:
           predicates:
             - Path=/api/v1/tutores,/api/v1/tutores/**
           filters:
-            - 'RewritePath=/api(?<segment>.*), ${segment}'
+            - RewritePath=/api(?<segment>.*), $\{segment}
           order: 1
 
         - id: verificacion-v1-direct
@@ -131,22 +191,44 @@ spring:
             - Path=/v1/verificacion,/v1/verificacion/**
           order: 1
 
-        # ========== EUREKA DASHBOARD ==========
-        - id: eureka-web-start
-          uri: http://eureka-server:8761
+        # ===================== RUTAS PROTEGIDAS - MENSAJES SERVICE =====================
+        - id: mensajes-v1-direct
+          uri: lb://mensajes-service
           predicates:
-            - Path=/eureka/web
+            - Path=/v1/mensaje,/v1/mensaje/**
+          order: 1
+
+        - id: mensajes-v1-api
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/api/v1/mensaje,/api/v1/mensaje/**
           filters:
-            - SetPath=/
-          order: 2
+            - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
+          order: 1
 
-        - id: eureka-web-other
-          uri: http://eureka-server:8761
+        - id: chats-v1-direct
+          uri: lb://mensajes-service
           predicates:
-            - Path=/eureka/**
-          order: 2
+            - Path=/v1/chat,/v1/chat/**
+          order: 1
 
-        # ========== PAYMENTS (FASTAPI) ==========
+        - id: chats-v1-api
+          uri: lb://mensajes-service
+          predicates:
+            - Path=/api/v1/chat,/api/v1/chat/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
+          order: 1
+
+        # ===================== RUTAS PROTEGIDAS - COMENTARIOS SERVICE =====================
+        - id: comentarios-api-secured-mutate
+          uri: lb://comentarios-service
+          predicates:
+            - Path=/api/comentario-curso,/api/comentario-curso/**
+            - Method=POST,PUT,DELETE
+          order: 1
+
+        # ===================== PAYMENTS (FASTAPI) =====================
         - id: ms-payments
           uri: lb://payments-service
           predicates:
@@ -157,7 +239,7 @@ spring:
             - AddRequestHeader=X-Forwarded-Proto, http
           order: 1
 
-        # ALIASES DE DOCUMENTACIÓN DE FASTAPI (PAYMENTS)
+        # ALIASES DOCS PAYMENTS (FastAPI)
         - id: payments-docs
           uri: lb://payments-service
           predicates:
@@ -188,8 +270,7 @@ spring:
             - Path=/openapi.json
           order: 0
 
-        # ========== CURSOSERVICE (FastAPI) ==========
-        # Salud
+        # ===================== CURSOSERVICE (FastAPI) =====================
         - id: cursos-health
           uri: lb://cursoservice
           predicates:
@@ -199,7 +280,6 @@ spring:
             - AddRequestHeader=X-Forwarded-Prefix, /curso
           order: 1
 
-        # OpenAPI y docs
         - id: cursos-openapi
           uri: lb://cursoservice
           predicates:
@@ -209,7 +289,6 @@ spring:
             - AddRequestHeader=X-Forwarded-Prefix, /curso
           order: 1
 
-        # ⚠️ ReDoc pide /curso/openapi.json (ruta absoluta con prefijo)
         - id: cursos-openapi-abs
           uri: lb://cursoservice
           predicates:
@@ -219,7 +298,6 @@ spring:
             - AddRequestHeader=X-Forwarded-Prefix, /curso
           order: 1
 
-        # API principal (FastAPI usa /api/v1/cursos/**)
         - id: cursos-api-v1
           uri: lb://cursoservice
           predicates:
@@ -229,7 +307,6 @@ spring:
             - AddRequestHeader=X-Forwarded-Prefix, /curso
           order: 1
 
-        # (Opcional) catch-all
         - id: cursos-direct
           uri: lb://cursoservice
           predicates:
@@ -238,6 +315,21 @@ spring:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
           order: 10
+
+        # ===================== EUREKA SERVER =====================
+        - id: eureka-web-start
+          uri: http://eureka-server:8761
+          predicates:
+            - Path=/eureka/web
+          filters:
+            - SetPath=/
+          order: 2
+
+        - id: eureka-web-other
+          uri: http://eureka-server:8761
+          predicates:
+            - Path=/eureka/**
+          order: 2
 
 eureka:
   client:

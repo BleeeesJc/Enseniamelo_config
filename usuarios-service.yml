@@ -1,16 +1,19 @@
 server:
   port: 7000
+
+spring:
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
+          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
   
   rabbitmq:
     host: rabbitmq
     port: 5672
     username: guest
-    password: guest
+    password: '{cipher}39044a58b68bc73c0318b15a9be6a2a5890031afa756ef6464faa9f9e8f40f48'
 
   cloud:
     function:
