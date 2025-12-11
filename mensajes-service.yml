@@ -1,11 +1,13 @@
 server:
   port: 8082
+  
+spring:
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
-          jwt-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
+          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
 
   cloud:
     function:
