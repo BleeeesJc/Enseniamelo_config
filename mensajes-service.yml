@@ -32,3 +32,14 @@ server:
             back-off-initial-interval: 1000
             back-off-max-interval: 10000
             back-off-multiplier: 2.0
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    root: INFO
+    "[com.enseniamelo]": DEBUG
+    "[org.springframework.security]": DEBUG
+    "[com.netflix.discovery]": DEBUG
+    "[com.netflix.eureka]": DEBUG
+    "[org.springframework.web]": DEBUG
