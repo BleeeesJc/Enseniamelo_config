@@ -4,8 +4,8 @@ server:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:9090/realms/enseniamelo
-          jwt-set-uri: http://keycloak:8080/realms/enseniamelo/protocol/openid-connect/certs
+          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
+          jwt-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
 
   cloud:
     function:
