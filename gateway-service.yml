@@ -17,7 +17,7 @@ spring:
         jwt:
           # Aceptamos tokens emitidos por Keycloak en localhost,
           # y usamos la URL interna de Docker para bajar las claves (JWKS)
-          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
           jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
 
   cloud:
