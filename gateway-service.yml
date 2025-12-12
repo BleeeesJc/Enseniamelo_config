@@ -57,6 +57,44 @@ spring:
             maxAge: 3600
 
       routes:
+       # ===================== KEYCLOAK PROXY =====================
+        # Ruta para obtener tokens (login)
+        - id: keycloak-token
+          uri: http://keycloak:8080
+          predicates:
+            - Path=/keycloak/realms/*/protocol/openid-connect/**
+          filters:
+            - RewritePath=/keycloak(?<segment>.*), $\{segment}
+            - RemoveRequestHeader=Authorization
+          order: -1
+
+        # Ruta para administración de usuarios
+        - id: keycloak-admin
+          uri: http://keycloak:8080
+          predicates:
+            - Path=/keycloak/admin/**
+          filters:
+            - RewritePath=/keycloak(?<segment>.*), $\{segment}
+          order: -1
+
+        # Ruta general de Keycloak (realms, etc)
+        - id: keycloak-realms
+          uri: http://keycloak:8080
+          predicates:
+            - Path=/keycloak/realms/**
+          filters:
+            - RewritePath=/keycloak(?<segment>.*), $\{segment}
+          order: -1
+
+        # Ruta para recursos estáticos de Keycloak
+        - id: keycloak-resources
+          uri: http://keycloak:8080
+          predicates:
+            - Path=/keycloak/resources/**,/keycloak/js/**
+          filters:
+            - RewritePath=/keycloak(?<segment>.*), $\{segment}
+          order: -1
+          
         # ===================== CONFIG SERVER =====================
         - id: config-server
           uri: http://config-server:8888
@@ -373,3 +411,4 @@ spring:
   cloud:
     config:
       uri: http://config-server:8888
+
