@@ -1,411 +1,206 @@
-server:
-  port: 8443
-  ssl:
-    enabled: true
-    key-store: classpath:keystore/keystore.p12
-    key-store-password: changeit
-    key-store-type: PKCS12
-    key-alias: gateway
+version: '3.8'
 
-spring:
-  application:
-    name: gateway-service
+services:
+  eureka-server:
+    image: eureka-server:latest
+    ports:
+      - "8761:8761"
+    mem_limit: 512m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+    depends_on:
+      config-server:
+        condition: service_healthy
+    networks:
+      - enseniamelo-network
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          # Aceptamos tokens emitidos por Keycloak en localhost,
-          # y usamos la URL interna de Docker para bajar las claves (JWKS)
-          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
-          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - enseniamelo-network
 
-  cloud:
-    gateway:
-      # TokenRelay para propagar el token al backend
-      default-filters:
-        - TokenRelay
+  usuarios:
+    image: usuarios-service:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_MONGODB_URI=mongodb+srv://jaredpimentel_db_user:DpCito170209@cluster0.cibyezm.mongodb.net/enseniamelo?retryWrites=true&w=majority
+      - SPRING_DATA_MONGODB_DATABASE=enseniamelo
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8080/realms/enseniamelo-realm
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_APPLICATION_NAME=usuarios-service
+      - EUREKA_INSTANCE_HOSTNAME=usuarios-service
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+    depends_on:
+      config-server:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - enseniamelo-network
 
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
+  mensajes:
+    image: mensajes-service:latest
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_MONGODB_URI=mongodb+srv://jaredpimentel_db_user:DpCito170209@cluster0.cibyezm.mongodb.net/enseniamelo?retryWrites=true&w=majority
+      - SPRING_DATA_MONGODB_DATABASE=enseniamelo
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8080/realms/enseniamelo-realm
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_APPLICATION_NAME=mensajes-service
+      - EUREKA_INSTANCE_HOSTNAME=mensajes-service
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - SERVER_PORT=8082
+    depends_on:
+      config-server:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - enseniamelo-network
 
-      # ======================== CORS GLOBAL ========================
-      globalcors:
-        add-to-simple-url-handler-mapping: true
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins:
-              - "http://localhost:3000"
-              - "http://localhost:4200"
-              - "http://localhost:5173"
-              - "http://127.0.0.1:5173"
-              - "https://localhost:8443"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - PATCH
-              - OPTIONS
-            allowedHeaders:
-              - "*"
-            exposedHeaders:
-              - "Authorization"
-            allowCredentials: true
-            maxAge: 3600
+  comentarios:
+    image: comentarios-service:latest
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb+srv://jaredpimentel_db_user:DpCito170209@cluster0.cibyezm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - SPRING_DATA_MONGODB_DATABASE=enseniamelo
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8080/realms/enseniamelo-realm
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_APPLICATION_NAME=comentarios-service
+      - EUREKA_INSTANCE_HOSTNAME=comentarios-service
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - SERVER_PORT=8083
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - enseniamelo-network
 
-      routes:
-       # ===================== KEYCLOAK PROXY =====================
-        # Ruta para obtener tokens (login)
-        - id: keycloak-openid-connect
-          uri: http://keycloak:8080
-          predicates:
-            - Path=/keycloak/realms/*/protocol/openid-connect/**
-          filters:
-            - RewritePath=/keycloak(?<segment>.*), $\{segment}
-            - RemoveRequestHeader=Authorization
-          order: -2
+  gateway:
+    image: gateway-service:latest
+    mem_limit: 512m
+    ports:
+      - "8443:8443"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_APPLICATION_NAME=gateway-service
+      - SERVER_PORT=8443
+      - SERVER_SSL_KEY_STORE=file:/keystore/keystore.p12
+      - SERVER_SSL_KEY_STORE_PASSWORD=changeit
+      - SERVER_SSL_KEY_STORE_TYPE=PKCS12
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_HOSTNAME=gateway-service
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_SECURE_PORT_ENABLED=true
+      - EUREKA_INSTANCE_SECURE_PORT=8443
+      - EUREKA_INSTANCE_NON_SECURE_PORT_ENABLED=false
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+    depends_on:
+      config-server:
+        condition: service_healthy
+    volumes:
+      - ${KEYSTORE_PATH:-./keystore}:/keystore
+    networks:
+      - enseniamelo-network
 
-        - id: keycloak-admin
-          uri: http://keycloak:8080
-          predicates:
-            - Path=/keycloak/admin/**
-          filters:
-            - RewritePath=/keycloak(?<segment>.*), $\{segment}
-          order: -2
+  # =========================
+  # CURSOSERVICE (FastAPI)
+  # =========================
+  cursoservice:
+    build: ./cursoservice
+    container_name: cursoservice
+    environment:
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8000:8000"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    networks:
+      - enseniamelo-network
 
-        - id: keycloak-realms
-          uri: http://keycloak:8080
-          predicates:
-            - Path=/keycloak/realms/**
-          filters:
-            - RewritePath=/keycloak(?<segment>.*), $\{segment}
-          order: -2
+  # =========================
+  # PAYMENTS SERVICE (FastAPI)
+  # =========================
+  payments-service:
+    build: ./pagos-service-fastapi
+    container_name: payments-service
+    environment:
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+      - SPRING_PROFILES_ACTIVE=docker
+      - APP_NAME=payments-service
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka
+    depends_on:
+      config-server:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+    networks:
+      - enseniamelo-network
 
-        - id: keycloak-resources
-          uri: http://keycloak:8080
-          predicates:
-            - Path=/keycloak/resources/**,/keycloak/js/**,/keycloak/css/**
-          filters:
-            - RewritePath=/keycloak(?<segment>.*), $\{segment}
-          order: -2
+  config-server:
+    image: configserver:latest
+    container_name: config-server
+    mem_limit: 512m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - ENCRYPT_KEY=${CONFIG_SERVER_ENCRYPT_KEY}
+      - SPRING_SECURITY_USER_NAME=${CONFIG_SERVER_USR}
+      - SPRING_SECURITY_USER_PASSWORD=${CONFIG_SERVER_PWD}
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -u ${CONFIG_SERVER_USR}:${CONFIG_SERVER_PWD} http://localhost:8888/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - enseniamelo-network
 
-          
-        # ===================== CONFIG SERVER =====================
-        - id: config-server
-          uri: http://config-server:8888
-          predicates:
-            - Path=/config/**
-          filters:
-            - RewritePath=/config/(?<segment>.*), /$\{segment}
-          order: -1
-
-        # ===================== DOCUMENTACIÓN USUARIOS SERVICE =====================
-        - id: usuarios-openapi-swagger-ui
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/openapi/**
-          order: -1
-
-        - id: usuarios-swagger-ui-alias
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/swagger-ui.html,/swagger-ui/**
-          filters:
-            - RewritePath=/swagger-ui(?<segment>.*), /openapi/swagger-ui$\{segment}
-          order: -1
-
-        - id: usuarios-api-docs-alias
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v3/api-docs,/v3/api-docs/**
-          filters:
-            - RewritePath=/v3/api-docs(?<segment>.*), /openapi/v3/api-docs$\{segment}
-          order: -1
-
-        - id: usuarios-webjars
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/webjars/**
-          order: -1
-
-        # ===================== DOCUMENTACIÓN MENSAJES SERVICE =====================
-        - id: mensajes-swagger-ui
-          uri: lb://mensajes-service
-          predicates:
-            - Path=/mensajes/swagger-ui.html,/mensajes/swagger-ui/**,/mensajes/webjars/**,/mensajes/openapi/swagger-ui/**
-          filters:
-            - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
-          order: -1
-
-        - id: mensajes-openapi-docs
-          uri: lb://mensajes-service
-          predicates:
-            - Path=/mensajes/openapi/v3/api-docs,/mensajes/openapi/v3/api-docs/**
-          filters:
-            - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
-          order: -1
-
-        # ===================== DOCUMENTACIÓN COMENTARIOS SERVICE =====================
-        - id: comentarios-openapi-swagger-ui
-          uri: lb://comentarios-service
-          predicates:
-            - Path=/comentarios/openapi/**
-          filters:
-            - RewritePath=/comentarios/openapi(?<segment>.*), /openapi$\{segment}
-            - RemoveRequestHeader=Authorization
-          order: -1
-
-        # ===================== RUTAS PÚBLICAS - USUARIOS SERVICE =====================
-        - id: auth-public
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v1/auth/login,/v1/auth/register
-          filters:
-            - RemoveRequestHeader=Authorization
-          order: 0
-
-        - id: auth-v1
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v1/auth/**
-          order: 0
-
-        - id: auth-api-public
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/api/v1/auth/**
-          filters:
-            - RewritePath=/api(?<segment>.*), $\{segment}
-            - RemoveRequestHeader=Authorization
-          order: 0
-
-        # ===================== RUTAS PÚBLICAS - COMENTARIOS SERVICE =====================
-        - id: comentarios-api-public-get
-          uri: lb://comentarios-service
-          predicates:
-            - Path=/api/comentario-curso,/api/comentario-curso/**
-            - Method=GET
-          filters:
-            - RemoveRequestHeader=Authorization
-          order: 0
-
-        # ===================== RUTAS PROTEGIDAS - USUARIOS SERVICE =====================
-        - id: usuarios-v1-direct
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v1/usuario,/v1/usuario/**
-          order: 1
-
-        - id: usuarios-v1-api
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/api/v1/usuario,/api/v1/usuario/**
-          filters:
-            - RewritePath=/api(?<segment>.*), $\{segment}
-          order: 1
-
-        - id: tutores-v1-direct
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v1/tutores,/v1/tutores/**
-          order: 1
-
-        - id: tutores-v1-api
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/api/v1/tutores,/api/v1/tutores/**
-          filters:
-            - RewritePath=/api(?<segment>.*), $\{segment}
-          order: 1
-
-        - id: verificacion-v1-direct
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v1/verificacion,/v1/verificacion/**
-          order: 1
-
-        # ===================== RUTAS PROTEGIDAS - MENSAJES SERVICE =====================
-        - id: mensajes-v1-direct
-          uri: lb://mensajes-service
-          predicates:
-            - Path=/v1/mensaje,/v1/mensaje/**
-          order: 1
-
-        - id: mensajes-v1-api
-          uri: lb://mensajes-service
-          predicates:
-            - Path=/api/v1/mensaje,/api/v1/mensaje/**
-          filters:
-            - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
-          order: 1
-
-        - id: chats-v1-direct
-          uri: lb://mensajes-service
-          predicates:
-            - Path=/v1/chat,/v1/chat/**
-          order: 1
-
-        - id: chats-v1-api
-          uri: lb://mensajes-service
-          predicates:
-            - Path=/api/v1/chat,/api/v1/chat/**
-          filters:
-            - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
-          order: 1
-
-        # ===================== RUTAS PROTEGIDAS - COMENTARIOS SERVICE =====================
-        - id: comentarios-api-secured-mutate
-          uri: lb://comentarios-service
-          predicates:
-            - Path=/api/comentario-curso,/api/comentario-curso/**
-            - Method=POST,PUT,DELETE
-          order: 1
-
-        # ===================== PAYMENTS (FASTAPI) =====================
-        - id: ms-payments
-          uri: lb://payments-service
-          predicates:
-            - Path=/ms-payments/**
-          filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /ms-payments
-            - AddRequestHeader=X-Forwarded-Proto, http
-          order: 1
-
-        # ALIASES DOCS PAYMENTS (FastAPI)
-        - id: payments-docs
-          uri: lb://payments-service
-          predicates:
-            - Path=/payments/docs
-          filters:
-            - RewritePath=/payments/docs, /docs
-          order: 2
-
-        - id: payments-redoc
-          uri: lb://payments-service
-          predicates:
-            - Path=/payments/redoc
-          filters:
-            - RewritePath=/payments/redoc, /redoc
-          order: 2
-
-        - id: payments-openapi
-          uri: lb://payments-service
-          predicates:
-            - Path=/payments/openapi.json
-          filters:
-            - RewritePath=/payments/openapi.json, /openapi.json
-          order: 2
-
-        - id: openapi-root-to-payments
-          uri: lb://payments-service
-          predicates:
-            - Path=/openapi.json
-          order: 0
-
-        # ===================== CURSOSERVICE (FastAPI) =====================
-        - id: cursos-health
-          uri: lb://cursoservice
-          predicates:
-            - Path=/curso/health
-          filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /curso
-          order: 1
-
-        - id: cursos-openapi
-          uri: lb://cursoservice
-          predicates:
-            - Path=/curso/openapi.json,/curso/docs,/curso/redoc
-          filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /curso
-          order: 1
-
-        - id: cursos-openapi-abs
-          uri: lb://cursoservice
-          predicates:
-            - Path=/curso/openapi.json
-          filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /curso
-          order: 1
-
-        - id: cursos-api-v1
-          uri: lb://cursoservice
-          predicates:
-            - Path=/curso/api/v1/**
-          filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /curso
-          order: 1
-
-        - id: cursos-direct
-          uri: lb://cursoservice
-          predicates:
-            - Path=/curso/**
-          filters:
-            - StripPrefix=1
-            - AddRequestHeader=X-Forwarded-Prefix, /curso
-          order: 10
-
-        # ===================== EUREKA SERVER =====================
-        - id: eureka-web-start
-          uri: http://eureka-server:8761
-          predicates:
-            - Path=/eureka/web
-          filters:
-            - SetPath=/
-          order: 2
-
-        - id: eureka-web-other
-          uri: http://eureka-server:8761
-          predicates:
-            - Path=/eureka/**
-          order: 2
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka/
-    initialInstanceInfoReplicationIntervalSeconds: 5
-    registryFetchIntervalSeconds: 5
-  instance:
-    preferIpAddress: true
-    hostname: gateway-service
-    leaseRenewalIntervalInSeconds: 5
-    leaseExpirationDurationInSeconds: 5
-    non-secure-port-enabled: false
-    secure-port-enabled: true
-    secure-port: 8443
-
-management:
-  endpoint:
-    gateway:
-      enabled: true
-    health:
-      show-details: ALWAYS
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-logging:
-  level:
-    root: INFO
-    "[org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator]": INFO
-    "[org.springframework.cloud.gateway]": DEBUG
-    "[org.springframework.security]": DEBUG
-    "[org.springframework.security.oauth2]": DEBUG
-
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-  cloud:
-    config:
-      uri: http://config-server:8888
+networks:
+  enseniamelo-network:
+    external: true
