@@ -9,6 +9,22 @@ keycloak:
     password: admin
     
 spring:
+  codec:
+    max-in-memory-size: 20MB
+  
+  web:
+    resources:
+      static-locations:
+        - classpath:/static/
+        - file:uploads/
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB
+  
   security:
     oauth2:
       resourceserver:
@@ -21,7 +37,7 @@ spring:
     port: 5672
     username: guest
     password: '{cipher}39044a58b68bc73c0318b15a9be6a2a5890031afa756ef6464faa9f9e8f40f48'
-
+    
   cloud:
     function:
       definition: usuarioProcessor;tutorProcessor;solicitudProcessor
@@ -37,7 +53,6 @@ spring:
             back-off-initial-interval: 1000
             back-off-max-interval: 10000
             back-off-multiplier: 2.0
-
         tutorProcessor-in-0:
           destination: tutores
           content-type: application/json
@@ -47,7 +62,6 @@ spring:
             back-off-initial-interval: 1000
             back-off-max-interval: 10000
             back-off-multiplier: 2.0
-
         solicitudProcessor-in-0:
           destination: verificar-solicitudes
           content-type: application/json
@@ -58,6 +72,12 @@ spring:
             back-off-max-interval: 10000
             back-off-multiplier: 2.0
 
+app:
+  upload:
+    dir: uploads/verificaciones/
+    max-file-size: 10485760  
+    allowed-extensions: jpg,jpeg,png,webp,pdf
+
 logging:
   level:
     root: INFO
@@ -65,12 +85,13 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.cloud.stream: DEBUG
     org.springframework.security: DEBUG
+    com.enseniamelo.usuarios: DEBUG
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,bindings,env
+        include: health,info,bindings,env,mappings
   endpoint:
     health:
       show-details: always
@@ -82,7 +103,31 @@ management:
 spring.config.activate.on-profile: docker
 server.port: 8081
 
+spring:
+  codec:
+    max-in-memory-size: 20MB
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+app:
+  upload:
+    dir: /app/uploads/verificaciones/
+
 ---
 spring.config.activate.on-profile: local
 server.port: 7000
 spring.rabbitmq.host: localhost
+
+spring:
+  codec:
+    max-in-memory-size: 20MB
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+app:
+  upload:
+    dir: uploads/verificaciones/
