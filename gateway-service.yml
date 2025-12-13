@@ -297,6 +297,17 @@ spring:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
           order: 1
+        # ===================== CURSOSERVICE - RUTAS PÚBLICAS =====================
+        - id: cursos-categorias-public
+          uri: lb://cursoservice
+          predicates:
+            - Path=/curso/api/v1/categorias/**
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Forwarded-Prefix, /curso
+            - RemoveRequestHeader=Authorization
+          order: 0
 
         - id: cursos-api-v1
           uri: lb://cursoservice
