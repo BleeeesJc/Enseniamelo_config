@@ -39,10 +39,6 @@ spring:
       kafka:
         binder:
           autoCreateTopics: true
-    
-    loadbalancer:
-      ribbon:
-        enabled: false  
 
 eureka:
   instance:
@@ -55,22 +51,18 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.cloud.stream: DEBUG
     org.springframework.security: DEBUG
-    com.enseniamelo.commentsservice: DEBUG
-    com.enseniamelo.commentsservice.external: DEBUG
-    org.springframework.web.reactive.function.client: DEBUG
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,bindings,env,metrics
+        include: health,info,bindings,env
   endpoint:
     health:
       show-details: always
   health:
     mongo:
       enabled: true
-
 
 ---
 spring.config.activate.on-profile: docker
