@@ -15,23 +15,19 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # Aceptamos tokens emitidos por Keycloak en localhost,
-          # y usamos la URL interna de Docker para bajar las claves (JWKS)
           issuer-uri: http://localhost:8080/realms/enseniamelo-realm
           jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
 
   cloud:
     gateway:
-      # TokenRelay para propagar el token al backend
-      default-filters:
-        - TokenRelay
+      # ✅ IMPORTANTE: quitamos TokenRelay global
+      default-filters: []
 
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-      # ======================== CORS GLOBAL ========================
       globalcors:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
@@ -42,17 +38,9 @@ spring:
               - "http://localhost:5173"
               - "http://127.0.0.1:5173"
               - "https://localhost:8443"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - PATCH
-              - OPTIONS
-            allowedHeaders:
-              - "*"
-            exposedHeaders:
-              - "Authorization"
+            allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
+            allowedHeaders: "*"
+            exposedHeaders: ["Authorization"]
             allowCredentials: true
             maxAge: 3600
 
@@ -63,14 +51,17 @@ spring:
           predicates:
             - Path=/config/**
           filters:
-            - RewritePath=/config/(?<segment>.*), /$\{segment}
+            - RewritePath=/config/(?<segment>.*), /${segment}
+            - RemoveRequestHeader=Authorization
           order: -1
 
-        # ===================== DOCUMENTACIÓN USUARIOS SERVICE =====================
+        # ===================== DOCUMENTACIÓN USUARIOS SERVICE (PUBLICA) =====================
         - id: usuarios-openapi-swagger-ui
           uri: lb://usuarios-service
           predicates:
             - Path=/openapi/**
+          filters:
+            - RemoveRequestHeader=Authorization
           order: -1
 
         - id: usuarios-swagger-ui-alias
@@ -78,7 +69,8 @@ spring:
           predicates:
             - Path=/swagger-ui.html,/swagger-ui/**
           filters:
-            - RewritePath=/swagger-ui(?<segment>.*), /openapi/swagger-ui$\{segment}
+            - RewritePath=/swagger-ui(?<segment>.*), /openapi/swagger-ui${segment}
+            - RemoveRequestHeader=Authorization
           order: -1
 
         - id: usuarios-api-docs-alias
@@ -86,22 +78,26 @@ spring:
           predicates:
             - Path=/v3/api-docs,/v3/api-docs/**
           filters:
-            - RewritePath=/v3/api-docs(?<segment>.*), /openapi/v3/api-docs$\{segment}
+            - RewritePath=/v3/api-docs(?<segment>.*), /openapi/v3/api-docs${segment}
+            - RemoveRequestHeader=Authorization
           order: -1
 
         - id: usuarios-webjars
           uri: lb://usuarios-service
           predicates:
             - Path=/webjars/**
+          filters:
+            - RemoveRequestHeader=Authorization
           order: -1
 
-        # ===================== DOCUMENTACIÓN MENSAJES SERVICE =====================
+        # ===================== DOCUMENTACIÓN MENSAJES (PUBLICA) =====================
         - id: mensajes-swagger-ui
           uri: lb://mensajes-service
           predicates:
             - Path=/mensajes/swagger-ui.html,/mensajes/swagger-ui/**,/mensajes/webjars/**,/mensajes/openapi/swagger-ui/**
           filters:
-            - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
+            - RewritePath=/mensajes/(?<remaining>.*), /${remaining}
+            - RemoveRequestHeader=Authorization
           order: -1
 
         - id: mensajes-openapi-docs
@@ -109,20 +105,21 @@ spring:
           predicates:
             - Path=/mensajes/openapi/v3/api-docs,/mensajes/openapi/v3/api-docs/**
           filters:
-            - RewritePath=/mensajes/(?<remaining>.*), /$\{remaining}
+            - RewritePath=/mensajes/(?<remaining>.*), /${remaining}
+            - RemoveRequestHeader=Authorization
           order: -1
 
-        # ===================== DOCUMENTACIÓN COMENTARIOS SERVICE =====================
+        # ===================== DOCUMENTACIÓN COMENTARIOS (PUBLICA) =====================
         - id: comentarios-openapi-swagger-ui
           uri: lb://comentarios-service
           predicates:
             - Path=/comentarios/openapi/**
           filters:
-            - RewritePath=/comentarios/openapi(?<segment>.*), /openapi$\{segment}
+            - RewritePath=/comentarios/openapi(?<segment>.*), /openapi${segment}
             - RemoveRequestHeader=Authorization
           order: -1
 
-        # ===================== RUTAS PÚBLICAS - USUARIOS SERVICE =====================
+        # ===================== AUTH PUBLICO (sin TokenRelay) =====================
         - id: auth-public
           uri: lb://usuarios-service
           predicates:
@@ -131,22 +128,59 @@ spring:
             - RemoveRequestHeader=Authorization
           order: 0
 
-        - id: auth-v1
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v1/auth/**
-          order: 0
-
         - id: auth-api-public
           uri: lb://usuarios-service
           predicates:
             - Path=/api/v1/auth/**
           filters:
-            - RewritePath=/api(?<segment>.*), $\{segment}
+            - RewritePath=/api(?<segment>.*), ${segment}
             - RemoveRequestHeader=Authorization
           order: 0
 
-        # ===================== RUTAS PÚBLICAS - COMENTARIOS SERVICE =====================
+        # ===================== USUARIOS PROTEGIDO (con TokenRelay) =====================
+        - id: usuarios-v1-direct
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/usuario,/v1/usuario/**
+          filters:
+            - TokenRelay
+          order: 1
+
+        - id: usuarios-v1-api
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/api/v1/usuario,/api/v1/usuario/**
+          filters:
+            - RewritePath=/api(?<segment>.*), ${segment}
+            - TokenRelay
+          order: 1
+
+        - id: tutores-v1-direct
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/tutores,/v1/tutores/**
+          filters:
+            - TokenRelay
+          order: 1
+
+        - id: tutores-v1-api
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/api/v1/tutores,/api/v1/tutores/**
+          filters:
+            - RewritePath=/api(?<segment>.*), ${segment}
+            - TokenRelay
+          order: 1
+
+        - id: verificacion-v1-direct
+          uri: lb://usuarios-service
+          predicates:
+            - Path=/v1/verificacion,/v1/verificacion/**
+          filters:
+            - TokenRelay
+          order: 1
+
+        # ===================== COMENTARIOS PUBLICO GET / PROTEGIDO MUTACIONES =====================
         - id: comentarios-api-public-get
           uri: lb://comentarios-service
           predicates:
@@ -156,46 +190,22 @@ spring:
             - RemoveRequestHeader=Authorization
           order: 0
 
-        # ===================== RUTAS PROTEGIDAS - USUARIOS SERVICE =====================
-        - id: usuarios-v1-direct
-          uri: lb://usuarios-service
+        - id: comentarios-api-secured-mutate
+          uri: lb://comentarios-service
           predicates:
-            - Path=/v1/usuario,/v1/usuario/**
-          order: 1
-
-        - id: usuarios-v1-api
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/api/v1/usuario,/api/v1/usuario/**
+            - Path=/api/comentario-curso,/api/comentario-curso/**
+            - Method=POST,PUT,DELETE
           filters:
-            - RewritePath=/api(?<segment>.*), $\{segment}
+            - TokenRelay
           order: 1
 
-        - id: tutores-v1-direct
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v1/tutores,/v1/tutores/**
-          order: 1
-
-        - id: tutores-v1-api
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/api/v1/tutores,/api/v1/tutores/**
-          filters:
-            - RewritePath=/api(?<segment>.*), $\{segment}
-          order: 1
-
-        - id: verificacion-v1-direct
-          uri: lb://usuarios-service
-          predicates:
-            - Path=/v1/verificacion,/v1/verificacion/**
-          order: 1
-
-        # ===================== RUTAS PROTEGIDAS - MENSAJES SERVICE =====================
+        # ===================== MENSAJES PROTEGIDO (con TokenRelay) =====================
         - id: mensajes-v1-direct
           uri: lb://mensajes-service
           predicates:
             - Path=/v1/mensaje,/v1/mensaje/**
+          filters:
+            - TokenRelay
           order: 1
 
         - id: mensajes-v1-api
@@ -203,13 +213,16 @@ spring:
           predicates:
             - Path=/api/v1/mensaje,/api/v1/mensaje/**
           filters:
-            - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+            - TokenRelay
           order: 1
 
         - id: chats-v1-direct
           uri: lb://mensajes-service
           predicates:
             - Path=/v1/chat,/v1/chat/**
+          filters:
+            - TokenRelay
           order: 1
 
         - id: chats-v1-api
@@ -217,15 +230,8 @@ spring:
           predicates:
             - Path=/api/v1/chat,/api/v1/chat/**
           filters:
-            - RewritePath=/api/v1/(?<segment>.*), /api/$\{segment}
-          order: 1
-
-        # ===================== RUTAS PROTEGIDAS - COMENTARIOS SERVICE =====================
-        - id: comentarios-api-secured-mutate
-          uri: lb://comentarios-service
-          predicates:
-            - Path=/api/comentario-curso,/api/comentario-curso/**
-            - Method=POST,PUT,DELETE
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+            - TokenRelay
           order: 1
 
         # ===================== PAYMENTS (FASTAPI) =====================
@@ -237,15 +243,17 @@ spring:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /ms-payments
             - AddRequestHeader=X-Forwarded-Proto, http
+            - TokenRelay
           order: 1
 
-        # ALIASES DOCS PAYMENTS (FastAPI)
+        # Docs payments públicos (sin token)
         - id: payments-docs
           uri: lb://payments-service
           predicates:
             - Path=/payments/docs
           filters:
             - RewritePath=/payments/docs, /docs
+            - RemoveRequestHeader=Authorization
           order: 2
 
         - id: payments-redoc
@@ -254,6 +262,7 @@ spring:
             - Path=/payments/redoc
           filters:
             - RewritePath=/payments/redoc, /redoc
+            - RemoveRequestHeader=Authorization
           order: 2
 
         - id: payments-openapi
@@ -262,15 +271,19 @@ spring:
             - Path=/payments/openapi.json
           filters:
             - RewritePath=/payments/openapi.json, /openapi.json
+            - RemoveRequestHeader=Authorization
           order: 2
 
         - id: openapi-root-to-payments
           uri: lb://payments-service
           predicates:
             - Path=/openapi.json
+          filters:
+            - RemoveRequestHeader=Authorization
           order: 0
 
         # ===================== CURSOSERVICE (FastAPI) =====================
+        # Health + docs públicos (sin token)
         - id: cursos-health
           uri: lb://cursoservice
           predicates:
@@ -278,6 +291,7 @@ spring:
           filters:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
+            - RemoveRequestHeader=Authorization
           order: 1
 
         - id: cursos-openapi
@@ -287,6 +301,7 @@ spring:
           filters:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
+            - RemoveRequestHeader=Authorization
           order: 1
 
         - id: cursos-openapi-abs
@@ -296,8 +311,10 @@ spring:
           filters:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
+            - RemoveRequestHeader=Authorization
           order: 1
-        # ===================== CURSOSERVICE - RUTAS PÚBLICAS =====================
+
+        # ✅ PUBLICO: categorías (GET) sin token
         - id: cursos-categorias-public
           uri: lb://cursoservice
           predicates:
@@ -309,6 +326,7 @@ spring:
             - RemoveRequestHeader=Authorization
           order: 0
 
+        # Protegido: resto API curso (con TokenRelay)
         - id: cursos-api-v1
           uri: lb://cursoservice
           predicates:
@@ -316,8 +334,10 @@ spring:
           filters:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
+            - TokenRelay
           order: 1
 
+        # Catch-all protegido (si quieres)
         - id: cursos-direct
           uri: lb://cursoservice
           predicates:
@@ -325,21 +345,25 @@ spring:
           filters:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
+            - TokenRelay
           order: 10
 
-        # ===================== EUREKA SERVER =====================
+        # ===================== EUREKA =====================
         - id: eureka-web-start
           uri: http://eureka-server:8761
           predicates:
             - Path=/eureka/web
           filters:
             - SetPath=/
+            - RemoveRequestHeader=Authorization
           order: 2
 
         - id: eureka-web-other
           uri: http://eureka-server:8761
           predicates:
             - Path=/eureka/**
+          filters:
+            - RemoveRequestHeader=Authorization
           order: 2
 
 eureka:
