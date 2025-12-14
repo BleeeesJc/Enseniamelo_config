@@ -1,11 +1,13 @@
 server:
   port: 8082
+  
+spring:
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8080/realms/enseniamelo-realm
-          jwt-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8080/realms/enseniamelo-realm
+          jwk-set-uri: http://keycloak:8080/realms/enseniamelo-realm/protocol/openid-connect/certs
 
   cloud:
     function:
@@ -32,3 +34,14 @@ server:
             back-off-initial-interval: 1000
             back-off-max-interval: 10000
             back-off-multiplier: 2.0
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    root: INFO
+    "[com.enseniamelo]": DEBUG
+    "[org.springframework.security]": DEBUG
+    "[com.netflix.discovery]": DEBUG
+    "[com.netflix.eureka]": DEBUG
+    "[org.springframework.web]": DEBUG
