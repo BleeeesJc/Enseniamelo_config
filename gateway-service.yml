@@ -20,7 +20,7 @@ spring:
 
   cloud:
     gateway:
-      # ✅ IMPORTANTE: quitamos TokenRelay global
+      # ✅ IMPORTANTE: sin TokenRelay global
       default-filters: []
 
       discovery:
@@ -28,6 +28,7 @@ spring:
           enabled: true
           lower-case-service-id: true
 
+      # ======================== CORS GLOBAL ========================
       globalcors:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
@@ -38,9 +39,17 @@ spring:
               - "http://localhost:5173"
               - "http://127.0.0.1:5173"
               - "https://localhost:8443"
-            allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
-            allowedHeaders: "*"
-            exposedHeaders: ["Authorization"]
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "Authorization"
             allowCredentials: true
             maxAge: 3600
 
@@ -55,7 +64,7 @@ spring:
             - RemoveRequestHeader=Authorization
           order: -1
 
-        # ===================== DOCUMENTACIÓN USUARIOS SERVICE (PUBLICA) =====================
+        # ===================== DOCUMENTACIÓN USUARIOS (PUBLICA) =====================
         - id: usuarios-openapi-swagger-ui
           uri: lb://usuarios-service
           predicates:
@@ -180,7 +189,7 @@ spring:
             - TokenRelay
           order: 1
 
-        # ===================== COMENTARIOS PUBLICO GET / PROTEGIDO MUTACIONES =====================
+        # ===================== COMENTARIOS PUBLICO/PROTEGIDO =====================
         - id: comentarios-api-public-get
           uri: lb://comentarios-service
           predicates:
@@ -234,7 +243,7 @@ spring:
             - TokenRelay
           order: 1
 
-        # ===================== PAYMENTS (FASTAPI) =====================
+        # ===================== PAYMENTS (FastAPI) =====================
         - id: ms-payments
           uri: lb://payments-service
           predicates:
@@ -246,7 +255,7 @@ spring:
             - TokenRelay
           order: 1
 
-        # Docs payments públicos (sin token)
+        # Docs payments públicos
         - id: payments-docs
           uri: lb://payments-service
           predicates:
@@ -326,7 +335,7 @@ spring:
             - RemoveRequestHeader=Authorization
           order: 0
 
-        # Protegido: resto API curso (con TokenRelay)
+        # ✅ RESTO API CURSO (SIN TokenRelay)
         - id: cursos-api-v1
           uri: lb://cursoservice
           predicates:
@@ -334,10 +343,9 @@ spring:
           filters:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
-            - TokenRelay
           order: 1
 
-        # Catch-all protegido (si quieres)
+        # ✅ catch-all SIN TokenRelay
         - id: cursos-direct
           uri: lb://cursoservice
           predicates:
@@ -345,7 +353,6 @@ spring:
           filters:
             - StripPrefix=1
             - AddRequestHeader=X-Forwarded-Prefix, /curso
-            - TokenRelay
           order: 10
 
         # ===================== EUREKA =====================
