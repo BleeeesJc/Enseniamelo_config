@@ -147,6 +147,16 @@ spring:
           order: 0
 
         # ===================== RUTAS PÚBLICAS - COMENTARIOS SERVICE =====================
+        - id: comentarios-public-get-direct
+          uri: lb://comentarios-service
+          predicates:
+            - Path=/comentario-curso,/comentario-curso/**
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Authorization
+            - RewritePath=/comentario-curso(?<segment>.*), /api/comentario-curso$\{segment}
+          order: 0
+        
         - id: comentarios-api-public-get
           uri: lb://comentarios-service
           predicates:
@@ -221,11 +231,20 @@ spring:
           order: 1
 
         # ===================== RUTAS PROTEGIDAS - COMENTARIOS SERVICE =====================
+        - id: comentarios-secured-mutate-direct
+          uri: lb://comentarios-service
+          predicates:
+            - Path=/comentario-curso,/comentario-curso/**
+            - Method=POST,PUT,DELETE,PATCH
+          filters:
+            - RewritePath=/comentario-curso(?<segment>.*), /api/comentario-curso$\{segment}
+          order: 1
+        
         - id: comentarios-api-secured-mutate
           uri: lb://comentarios-service
           predicates:
             - Path=/api/comentario-curso,/api/comentario-curso/**
-            - Method=POST,PUT,DELETE
+            - Method=POST,PUT,DELETE,PATCH
           order: 1
 
         # ===================== PAYMENTS (FASTAPI) =====================
@@ -373,3 +392,4 @@ spring:
   cloud:
     config:
       uri: http://config-server:8888
+
